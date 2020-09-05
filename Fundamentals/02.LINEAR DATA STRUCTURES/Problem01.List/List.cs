@@ -4,14 +4,14 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Reflection.Metadata.Ecma335;
+
     public class List<T> : IAbstractList<T>
     {
         private const int DEFAULT_CAPACITY = 4;
         private T[] _items;
 
         public List()
-            : this(DEFAULT_CAPACITY)
-        {
+            : this(DEFAULT_CAPACITY) {
         }
 
         public List(int capacity)
@@ -46,6 +46,7 @@
             this._items[this.Count++] = item;
         }
 
+        
         public bool Contains(T item)
         {
             for (int i = 0; i < this.Count; i++)
@@ -59,6 +60,8 @@
             return false;
         }
 
+
+        
         public int IndexOf(T item)
         {
             for (int i = 0; i < this.Count; i++)
@@ -86,20 +89,14 @@
             this.Count++;
         }
 
+
         public bool Remove(T item)
         {
-            if (this.Contains(item))
+            var indexOfItem = this.IndexOf(item);
+
+            if (indexOfItem > -1)
             {
-                for (int i = 0; i < this.Count - 1; i++)
-                {
-                    if (this._items[i].Equals(item))
-                    {
-                        this._items[i] = default;
-                        this.Count--;
-                        return true;
-                    }
-                    this._items[i] = this._items[i + 1];
-                }
+                this.RemoveAt(indexOfItem);
             }
 
             return false;
@@ -130,7 +127,7 @@
 
         private void GrowIfNecessary()
         {
-            if (this.Count == this._items.Length)
+            if(this.Count == this._items.Length)
             {
                 this._items = this.Grow();
             }
