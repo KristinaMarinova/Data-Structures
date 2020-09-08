@@ -58,7 +58,6 @@
                 }
                 else
                 {
-                    //var lastNode = this._tail;
                     this.tail.Next = newNode;
                     this.tail = newNode;
                 }
