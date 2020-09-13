@@ -4,18 +4,28 @@
 
     interface IAbstractTree<T>
     {
-        T Value { get; }
-        Tree<T> Parent { get; }
-        IReadOnlyCollection<Tree<T>> Children { get; }
+        T Key { get; }
 
-        ICollection<T> OrderBfs();
+        Tree<T> Parent { get;  }
 
-        ICollection<T> OrderDfs();
+        IReadOnlyCollection<Tree<T>> Children { get;  }
 
-        void AddChild(T parentKey, Tree<T> child);
+        void AddParent(Tree<T> parent);
 
-        void RemoveNode(T nodeKey);
+        void AddChild(Tree<T> child);
 
-        void Swap(T firstKey, T secondKey);
+        string GetAsString();
+
+        List<T> GetLeafKeys();
+
+        List<T> GetMiddleKeys();
+
+        Tree<T> GetDeepestLeftomostNode();
+
+        List<T> GetLongestPath();
+
+        List<List<T>> PathsWithGivenSum(int sum);
+
+        List<Tree<T>> SubTreesWithGivenSum(int sum);
     }
 }
