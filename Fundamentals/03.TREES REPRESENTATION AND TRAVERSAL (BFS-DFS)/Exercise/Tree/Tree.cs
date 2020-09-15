@@ -50,40 +50,23 @@
             return sb.ToString().Trim();
         }
 
-        private void PrintTree(Tree<T> tree, StringBuilder sb, int indent = 0)
-        {
-            if (tree == null)
-            {
-                return;
-            }
-
-            sb = sb.AppendLine($"{new string(' ', indent)}{tree.Key}");
-
-            foreach (var child in tree.Children)
-            {
-                PrintTree(child, sb, indent + 2);
-            }
-        }
-
         public Tree<T> GetDeepestLeftomostNode()
         {
-            Tree<T> res = this;
+            var leafNodes = FindLeafNodesBfs(this);
+            int deepestNodeDepth = 0;
+            Tree<T> deepestNode = null;
 
-            Queue<Tree<T>> nodes = new Queue<Tree<T>>();
-            nodes.Enqueue(res);
-
-            while (nodes.Count > 0)
+            foreach (var node in leafNodes)
             {
-                res = nodes.Dequeue();
-                if (res._children.Count == 0)
+                int currentDepth = this.GetDepthFromLeafToParent(node);
+                if (currentDepth > deepestNodeDepth)
                 {
-                    return res;
+                    deepestNodeDepth = currentDepth;
+                    deepestNode = node;
                 }
-
-                nodes.Enqueue(res._children[0]);
             }
 
-            return res;
+            return deepestNode;
         }
 
         public List<T> GetLeafKeys()
@@ -142,25 +125,6 @@
             return path;
         }
 
-        private List<T> FindLongestPath(Tree<T> tree)
-        {
-            var result = new List<T>();
-            List<T> path;
-
-            foreach (var child in tree.Children)
-            {
-                path = FindLongestPath(child);
-
-                if (path.Count > result.Count)
-                {
-                    result = path;
-                }
-            }
-
-            result.Insert(0, tree.Key);
-            return result;
-        }
-
         public List<List<T>> PathsWithGivenSum(int sum)
         {
             var result = new List<List<T>>();
@@ -215,6 +179,78 @@
             }
 
             return sum;
+        }
+
+        private void PrintTree(Tree<T> tree, StringBuilder sb, int indent = 0)
+        {
+            if (tree == null)
+            {
+                return;
+            }
+
+            sb = sb.AppendLine($"{new string(' ', indent)}{tree.Key}");
+
+            foreach (var child in tree.Children)
+            {
+                PrintTree(child, sb, indent + 2);
+            }
+        }
+
+        private List<T> FindLongestPath(Tree<T> tree)
+        {
+            var result = new List<T>();
+            List<T> path;
+
+            foreach (var child in tree.Children)
+            {
+                path = FindLongestPath(child);
+
+                if (path.Count > result.Count)
+                {
+                    result = path;
+                }
+            }
+
+            result.Insert(0, tree.Key);
+            return result;
+        }
+
+        private List<Tree<T>> FindLeafNodesBfs(Tree<T> root)
+        {
+            var result = new List<Tree<T>>();
+            var queue = new Queue<Tree<T>>();
+
+            queue.Enqueue(root);
+
+            while (queue.Count != 0)
+            {
+                var subtree = queue.Dequeue();
+
+                if (subtree.Children.Count == 0)
+                {
+                    result.Add(subtree);
+                }
+
+                foreach (var child in subtree.Children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+
+            return result;
+        }
+
+        private int GetDepthFromLeafToParent(Tree<T> node)
+        {
+            int depth = 0;
+            var current = node;
+            while (current.Parent != null)
+            {
+                depth++;
+                current = current.Parent;
+            }
+
+            return depth;
         }
     }
 }
