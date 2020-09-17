@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text;
 
     public class Tree<T> : IAbstractTree<T>
@@ -24,7 +23,6 @@
         public T Key { get; private set; }
 
         public Tree<T> Parent { get; private set; }
-
 
         public IReadOnlyCollection<Tree<T>> Children
             => this._children.AsReadOnly();
@@ -111,22 +109,13 @@
 
         public List<Tree<T>> SubTreesWithGivenSum(int sum)
         {
+            Func<Tree<T>, int, bool> subtreeSumPredicate =
+                (currentNode, wantedSum) => this.HasGivenSum(currentNode, wantedSum);
+
             var subtreesWithGivenSum = new List<Tree<T>>();
-            var allNodes = this.OrderBfsNodes();
 
-            foreach (var node in allNodes)
-            {
-                int subtreeSum = this.GetSubtreeSumDfs(node);
-
-                if (subtreeSum == sum)
-                {
-                    subtreesWithGivenSum.Add(node);
-                }
-            }
-
-            return subtreesWithGivenSum;
+            return this.OrderBfsNodes(subtreeSumPredicate, sum);
         }
-
 
         private void OrderDfsForString(int depth, StringBuilder result, Tree<T> subtree)
         {
@@ -181,25 +170,16 @@
             return result;
         }
 
-        private List<Tree<T>> OrderBfsNodes(Func<Tree<T>, bool> predicate = null)
+        private List<Tree<T>> OrderBfsNodes(Func<Tree<T>, bool> predicate)
         {
             var result = new List<Tree<T>>();
             var nodes = new Queue<Tree<T>>();
-
             nodes.Enqueue(this);
 
             while (nodes.Count > 0)
             {
                 var currentNode = nodes.Dequeue();
-
-                if (predicate != null)
-                {
-                    if (predicate.Invoke(currentNode))
-                    {
-                        result.Add(currentNode);
-                    }
-                }
-                else
+                if (predicate.Invoke(currentNode))
                 {
                     result.Add(currentNode);
                 }
@@ -209,7 +189,28 @@
                     nodes.Enqueue(child);
                 }
             }
+            return result;
+        }
 
+        private List<Tree<T>> OrderBfsNodes(Func<Tree<T>, int, bool> predicate, int sum)
+        {
+            var result = new List<Tree<T>>();
+            var nodes = new Queue<Tree<T>>();
+            nodes.Enqueue(this);
+
+            while (nodes.Count > 0)
+            {
+                var currentNode = nodes.Dequeue();
+                if (predicate.Invoke(currentNode, sum))
+                {
+                    result.Add(currentNode);
+                }
+
+                foreach (var child in currentNode.Children)
+                {
+                    nodes.Enqueue(child);
+                }
+            }
             return result;
         }
 
@@ -252,6 +253,11 @@
             currentPath.RemoveAt(currentPath.Count - 1);
         }
 
+        private bool HasGivenSum(Tree<T> currentNode, int sum)
+        {
+            int actualSum = this.GetSubtreeSumDfs(currentNode);
+            return actualSum == sum;
+        }
 
         private int GetSubtreeSumDfs(Tree<T> currentNode)
         {
