@@ -9,19 +9,15 @@
     {
         private readonly List<Tree<T>> _children;
 
-        public Tree(T key)
+        public Tree(T key, params Tree<T>[] children)
         {
             this.Key = key;
-            this.Parent = null;
             this._children = new List<Tree<T>>();
-        }
 
-        public Tree(T key, params Tree<T>[] children) : this(key)
-        {
             foreach (var child in children)
             {
+                this.AddChild(child);
                 child.Parent = this;
-                this._children.Add(child);
             }
         }
 
@@ -45,20 +41,24 @@
 
         public string GetAsString()
         {
-            var sb = new StringBuilder();
-            PrintTree(this, sb, 0);
-            return sb.ToString().Trim();
+            StringBuilder result = new StringBuilder();
+            this.OrderDfsForString(0, result, this);
+
+            return result.ToString().Trim();
         }
 
         public Tree<T> GetDeepestLeftomostNode()
         {
-            var leafNodes = FindLeafNodesBfs(this);
+            Func<Tree<T>, bool> leafKeysPredicate = (node) => this.IsLeaf(node);
+            var leafNodes = this.OrderBfsNodes(leafKeysPredicate);
+
             int deepestNodeDepth = 0;
             Tree<T> deepestNode = null;
 
             foreach (var node in leafNodes)
             {
                 int currentDepth = this.GetDepthFromLeafToParent(node);
+
                 if (currentDepth > deepestNodeDepth)
                 {
                     deepestNodeDepth = currentDepth;
@@ -71,169 +71,142 @@
 
         public List<T> GetLeafKeys()
         {
-            var result = new List<T>();
-            var queue = new Queue<Tree<T>>();
-
-            queue.Enqueue(this);
-
-            while (queue.Count != 0)
-            {
-                var subtree = queue.Dequeue();
-
-                if(subtree._children.Count == 0)
-                {
-                    result.Add(subtree.Key);
-                }
-
-                foreach (var child in subtree.Children)
-                {
-                    queue.Enqueue(child);
-                }
-            }
-
-            return result;
+            Func<Tree<T>, bool> leafKeysPredicate = (node) => this.IsLeaf(node);
+            return this.OrderBfs(leafKeysPredicate);
         }
 
         public List<T> GetMiddleKeys()
         {
-            var result = new List<T>();
-            var queue = new Queue<Tree<T>>();
-
-            queue.Enqueue(this);
-
-            while (queue.Count != 0)
-            {
-                var subtree = queue.Dequeue();
-
-                if (subtree._children.Count > 0 && subtree.Parent != null)
-                {
-                    result.Add(subtree.Key);
-                }
-
-                foreach (var child in subtree.Children)
-                {
-                    queue.Enqueue(child);
-                }
-            }
-            result = result.OrderBy(x => x).ToList();
-            return result;
+            Func<Tree<T>, bool> middleKeysPredicate = (node) => this.IsMiddle(node);
+            return this.OrderBfs(middleKeysPredicate);
         }
 
         public List<T> GetLongestPath()
         {
-            List<T> path = FindLongestPath(this);
-            return path;
+            var deepestNode = this.GetDeepestLeftomostNode();
+            var resultedPath = new List<T>();
+            var currentNode = deepestNode;
+
+            while (currentNode != null)
+            {
+                resultedPath.Add(currentNode.Key);
+                currentNode = currentNode.Parent;
+            }
+
+            resultedPath.Reverse();
+
+            return resultedPath;
         }
 
         public List<List<T>> PathsWithGivenSum(int sum)
         {
             var result = new List<List<T>>();
-            PathsWithGivenSum(this, 0, sum, result);
+            var currentPath = new List<T>();
+            currentPath.Add(this.Key);
+            int currentSum = Convert.ToInt32(this.Key);
+            this.GetPathWithSumDfs(this, result, currentPath, ref currentSum, sum);
+
             return result;
-        }
-
-        public void PathsWithGivenSum(Tree<T> subtree, int sum, int targetSum, List<List<T>> result)
-        {
-            sum += Convert.ToInt32(subtree.Key);
-
-            if (sum == targetSum)
-            {
-                var path = new Stack<T>();
-                var current = subtree;
-                path.Push(current.Key);
-                while (current.Parent != null)
-                {
-                    current = current.Parent;
-                    path.Push(current.Key);
-                }
-
-                var resultPath = path.ToList();
-                result.Add(resultPath);
-            }
-
-            foreach (var child in subtree.Children)
-            {
-                PathsWithGivenSum(child, sum, targetSum, result);
-            }
         }
 
         public List<Tree<T>> SubTreesWithGivenSum(int sum)
         {
-            List<Tree<T>> subtrees = new List<Tree<T>>();
-            GetSubTreesWithGivenSum(this, sum, 0, subtrees);
-            return subtrees;
-        }
+            var subtreesWithGivenSum = new List<Tree<T>>();
+            var allNodes = this.OrderBfsNodes();
 
-        private int GetSubTreesWithGivenSum(Tree<T> tree, int targetSum, int sum, List<Tree<T>> subtrees)
-        {
-            sum = Convert.ToInt32(tree.Key);
-
-            foreach (var child in tree.Children)
+            foreach (var node in allNodes)
             {
-                sum += GetSubTreesWithGivenSum(child, targetSum, sum, subtrees);
-            }
+                int subtreeSum = this.GetSubtreeSumDfs(node);
 
-            if (sum == targetSum)
-            {
-                subtrees.Add(tree);
-            }
-
-            return sum;
-        }
-
-        private void PrintTree(Tree<T> tree, StringBuilder sb, int indent = 0)
-        {
-            if (tree == null)
-            {
-                return;
-            }
-
-            sb = sb.AppendLine($"{new string(' ', indent)}{tree.Key}");
-
-            foreach (var child in tree.Children)
-            {
-                PrintTree(child, sb, indent + 2);
-            }
-        }
-
-        private List<T> FindLongestPath(Tree<T> tree)
-        {
-            var result = new List<T>();
-            List<T> path;
-
-            foreach (var child in tree.Children)
-            {
-                path = FindLongestPath(child);
-
-                if (path.Count > result.Count)
+                if (subtreeSum == sum)
                 {
-                    result = path;
+                    subtreesWithGivenSum.Add(node);
                 }
             }
 
-            result.Insert(0, tree.Key);
+            return subtreesWithGivenSum;
+        }
+
+
+        private void OrderDfsForString(int depth, StringBuilder result, Tree<T> subtree)
+        {
+            result
+                .Append(new string(' ', depth))
+                .Append(subtree.Key)
+                .Append(Environment.NewLine);
+
+            foreach (var child in subtree.Children)
+            {
+                this.OrderDfsForString(depth + 2, result, child);
+            }
+        }
+
+        private bool IsLeaf(Tree<T> node)
+        {
+            return node.Children.Count == 0;
+        }
+
+        private bool IsRoot(Tree<T> node)
+        {
+            return node.Parent == null;
+        }
+
+        private bool IsMiddle(Tree<T> node)
+        {
+            return node.Parent != null && node.Children.Count > 0;
+        }
+
+        private List<T> OrderBfs(Func<Tree<T>, bool> predicate)
+        {
+            var result = new List<T>();
+            var nodes = new Queue<Tree<T>>();
+
+            nodes.Enqueue(this);
+
+            while (nodes.Count > 0)
+            {
+                var currentNode = nodes.Dequeue();
+
+                if (predicate.Invoke(currentNode))
+                {
+                    result.Add(currentNode.Key);
+                }
+
+                foreach (var child in currentNode.Children)
+                {
+                    nodes.Enqueue(child);
+                }
+            }
+
             return result;
         }
 
-        private List<Tree<T>> FindLeafNodesBfs(Tree<T> root)
+        private List<Tree<T>> OrderBfsNodes(Func<Tree<T>, bool> predicate = null)
         {
             var result = new List<Tree<T>>();
-            var queue = new Queue<Tree<T>>();
+            var nodes = new Queue<Tree<T>>();
 
-            queue.Enqueue(root);
+            nodes.Enqueue(this);
 
-            while (queue.Count != 0)
+            while (nodes.Count > 0)
             {
-                var subtree = queue.Dequeue();
+                var currentNode = nodes.Dequeue();
 
-                if (subtree.Children.Count == 0)
+                if (predicate != null)
                 {
-                    result.Add(subtree);
+                    if (predicate.Invoke(currentNode))
+                    {
+                        result.Add(currentNode);
+                    }
+                }
+                else
+                {
+                    result.Add(currentNode);
                 }
 
-                foreach (var child in subtree.Children)
+                foreach (var child in currentNode.Children)
                 {
-                    queue.Enqueue(child);
+                    nodes.Enqueue(child);
                 }
             }
 
@@ -243,7 +216,8 @@
         private int GetDepthFromLeafToParent(Tree<T> node)
         {
             int depth = 0;
-            var current = node;
+            Tree<T> current = node;
+
             while (current.Parent != null)
             {
                 depth++;
@@ -252,5 +226,45 @@
 
             return depth;
         }
+
+        private void GetPathWithSumDfs(
+            Tree<T> current,
+            List<List<T>> wantedPaths,
+            List<T> currentPath,
+            ref int currentSum,
+            int wantedSum)
+        {
+
+            foreach (var child in current.Children)
+            {
+                currentPath.Add(child.Key);
+                currentSum += Convert.ToInt32(child.Key);
+
+                this.GetPathWithSumDfs(child, wantedPaths, currentPath, ref currentSum, wantedSum);
+            }
+
+            if (currentSum == wantedSum)
+            {
+                wantedPaths.Add(new List<T>(currentPath));
+            }
+
+            currentSum -= Convert.ToInt32(current.Key);
+            currentPath.RemoveAt(currentPath.Count - 1);
+        }
+
+
+        private int GetSubtreeSumDfs(Tree<T> currentNode)
+        {
+            int currentSum = Convert.ToInt32(currentNode.Key);
+            int childSum = 0;
+
+            foreach (var childNode in currentNode.Children)
+            {
+                childSum += this.GetSubtreeSumDfs(childNode);
+            }
+
+            return currentSum + childSum;
+        }
+
     }
 }
