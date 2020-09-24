@@ -71,17 +71,39 @@
 
         public List<IEntity> RetainAllFromTo(BaseEntityStatus lowerBound, BaseEntityStatus upperBound)
         {
-            throw new NotImplementedException();
+            var result = new List<IEntity>(this.EntitiesCount);
+            int lowerBoundIndex = (int)lowerBound;
+            int upperBoundIndex = (int)upperBound;
+
+            for (int i = 0; i < this.EntitiesCount; i++)
+            {
+                var entity = this._entities[i];
+                int entityStatusIndex = (int)entity.Status;
+
+                if (entityStatusIndex >= lowerBoundIndex && entityStatusIndex <= upperBoundIndex)
+                {
+                    result.Add(entity);
+                }
+            }
+
+            return result;
         }
 
         public void Swap(IEntity first, IEntity second)
         {
-            throw new NotImplementedException();
+            int indexOfFirst = this._entities.IndexOf(first);
+            int indexOfSecond = this._entities.IndexOf(second);
+            this.ValidateEntity(indexOfFirst);
+            this.ValidateEntity(indexOfSecond);
+
+            var temp = this._entities[indexOfFirst];
+            this._entities[indexOfFirst] = this._entities[indexOfSecond];
+            this._entities[indexOfSecond] = temp;
         }
 
         public IEntity[] ToArray()
         {
-            throw new NotImplementedException();
+            return this._entities.ToArray();
         }
 
         public void UpdateAll(BaseEntityStatus oldStatus, BaseEntityStatus newStatus)
