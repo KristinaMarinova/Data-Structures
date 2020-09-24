@@ -5,4 +5,14 @@
     <RootNamespace>_04.CookiesProblem</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="XAct.Wintellect.PowerCollections" Version="0.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="PowerCollections">
+      <HintPath>C:\Users\Krisi\Desktop\powercollections\Binaries\PowerCollections.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
