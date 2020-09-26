@@ -49,17 +49,12 @@
 
         public List<IEntity> GetAll()
         {
-            return this._entities;
-        }
-
-        public IEnumerator<IEntity> GetEnumerator()
-        {
-            throw new NotImplementedException();
+            return new List<IEntity>(this._entities);
         }
 
         public void RemoveSold()
         {
-            throw new NotImplementedException();
+            this._entities.RemoveAll(e => e.Status == BaseEntityStatus.Sold);
         }
 
         public void Replace(IEntity oldEntity, IEntity newEntity)
@@ -108,12 +103,22 @@
 
         public void UpdateAll(BaseEntityStatus oldStatus, BaseEntityStatus newStatus)
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < this.EntitiesCount; i++)
+            {
+                var current = this._entities[i];
+                if (current.Status == oldStatus)
+                {
+                    current.Status = newStatus;
+                }
+            }
         }
-
+        public IEnumerator<IEntity> GetEnumerator()
+        {
+            return this._entities.GetEnumerator();
+        }
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return this.GetEnumerator();
         }
 
         private IEntity GetById(int id)
