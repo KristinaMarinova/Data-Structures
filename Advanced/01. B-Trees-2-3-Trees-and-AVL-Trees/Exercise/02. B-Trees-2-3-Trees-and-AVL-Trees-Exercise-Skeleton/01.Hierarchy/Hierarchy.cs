@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Collections;
+    using System.Linq;
 
     public class Hierarchy<T> : IHierarchy<T>
     {
@@ -41,7 +42,8 @@
         }
         public IEnumerable<T> GetChildren(T element)
         {
-            throw new NotImplementedException();
+            ContainsItemOrThrowExeption(element);
+            return elements[element].Children.Select(n =>n.Value);
         }
 
         public T GetParent(T element)
