@@ -71,7 +71,17 @@
 
         public IEnumerator<T> GetEnumerator()
         {
-            throw new NotImplementedException();
+            Queue<Node<T>> Q = new Queue<Node<T>>();
+            Q.Enqueue(this.root);
+            while (Q.Count > 0)
+            {
+                var node = Q.Dequeue();
+                yield return node.Value;
+                foreach (var child in node.Children)
+                {
+                    Q.Enqueue(child);
+                }
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
