@@ -60,7 +60,13 @@
 
         public IEnumerable<T> GetCommonElements(Hierarchy<T> other)
         {
-            throw new NotImplementedException();
+            foreach (var el in elements)
+            {
+                if (other.Contains(el.Value.Value))
+                {
+                    yield return el.Value.Value;
+                }
+            }
         }
 
         public IEnumerator<T> GetEnumerator()
