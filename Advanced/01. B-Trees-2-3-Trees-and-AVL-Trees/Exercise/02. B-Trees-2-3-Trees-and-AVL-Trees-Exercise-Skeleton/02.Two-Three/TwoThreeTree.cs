@@ -44,7 +44,7 @@
             if (node.IsTwoNode())
             {
                 RecursivePrint(node.LeftChild, sb);
-                RecursivePrint(node.RightChild, sb);
+                RecursivePrint(node.MiddleChild, sb);
             }
             else if (node.IsThreeNode())
             {
