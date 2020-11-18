@@ -24,5 +24,15 @@
         public DateTime IssueDate { get; set; }
 
         public DateTime DueDate { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Invoice;
+            if (other == null)
+            {
+                return false;
+            }
+            return this.SerialNumber == other.SerialNumber;
+        }
     }
 }
